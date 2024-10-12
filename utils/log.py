@@ -48,7 +48,18 @@ def time2file_name(time):
     minute = time[14:16]
     second = time[17:19]
     time_filename = (
-        year + "_" + month + "_" + day + "_" + hour + "_" + minute + "_" + second
+        year
+        + "y_"
+        + month
+        + "m_"
+        + day
+        + "d_"
+        + hour
+        + "h_"
+        + minute
+        + "m_"
+        + second
+        + "s"
     )
     return time_filename
 

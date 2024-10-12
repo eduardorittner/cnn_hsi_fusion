@@ -1,5 +1,6 @@
 from dataset import TrainDataset, ValidationDataset
-import utils.loss as loss
+from utils.loss import Loss_MRAE, Loss_RMSE, Loss_PSNR
+from utils.log import AverageMeter, time2file_name, initialize_logger, save_checkpoint
 from torch.utils.data import DataLoader
 from models import *
 import argparse
@@ -7,7 +8,6 @@ import datetime
 import os
 import torch
 
-from utils.loss import save_checkpoint
 
 # CLI Arguments
 
@@ -39,22 +39,22 @@ total_iters = iters_per_epoch * opt.end_epoch
 
 # Loss functions
 
-loss_mrae = loss.Loss_MRAE()
-loss_rmse = loss.Loss_RMSE()
-loss_psnr = loss.Loss_PSNR()
+loss_mrae = Loss_MRAE()
+loss_rmse = Loss_RMSE()
+loss_psnr = Loss_PSNR()
 
 # Logger
 
-date_time = loss.time2file_name(str(datetime.datetime.now()))
+date_time = time2file_name(str(datetime.datetime.now()))
 logdir = opt.outf + date_time
 if not os.path.exists(logdir):
     os.makedirs(logdir)
 logfile = os.path.join(logdir, "train.log")
-logger = loss.initialize_logger(logfile)
+logger = initialize_logger(logfile)
 
 # Load model
 
-model = model_generator(opt.model, opt.pretrained_model)
+model = model_generator(opt.model, opt.pretrained_path)
 
 if torch.cuda.is_available():
     model.cuda()
@@ -62,7 +62,7 @@ if torch.cuda.is_available():
     loss_rmse.cuda()
     loss_psnr.cuda()
 else:
-    raise Exception("[ERROR]: Cuda is not available")
+    print("[Warning]: Cuda is not available")
 
 optimizer = torch.optim.Adam(model.parameters(), lr=4e-4, betas=(0.9, 0.999))
 scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
@@ -71,10 +71,10 @@ scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
 
 # Load pretrained model
 
-if opt.pretrained_model:
-    if os.path.isfile(opt.pretrained_model):
-        print(f"Loading checkpoint: '{opt.pretrained_model}'")
-        checkpoint = torch.load(opt.pretrained_model)
+if opt.pretrained_path:
+    if os.path.isfile(opt.pretrained_path):
+        print(f"Loading checkpoint: '{opt.pretrained_path}'")
+        checkpoint = torch.load(opt.pretrained_path)
         start_epoch, iter = checkpoint["epoch"], checkpoint["iter"]
         model.load_state_dict(checkpoint["state_dict"])
         optimizer.load_state_dict(checkpoint["optimizer"])
@@ -82,9 +82,9 @@ if opt.pretrained_model:
 
 def validate(val_loader, model):
     model.eval()
-    losses_mrae = loss.AverageMeter()
-    losses_rmse = loss.AverageMeter()
-    losses_psnr = loss.AverageMeter()
+    losses_mrae = AverageMeter()
+    losses_rmse = AverageMeter()
+    losses_psnr = AverageMeter()
 
     # We compute the validation loss on a 256x256 patch on the center of the image
     for i, (input, target) in enumerate(val_loader):
@@ -106,11 +106,12 @@ def validate(val_loader, model):
 
 
 def main():
+    global iter
     torch.backends.cudnn.benchmark = True
     record_mrae_loss = 1000
     while iter < total_iters:
         model.train()
-        losses = loss.AverageMeter()
+        losses = AverageMeter()
         train_loader = DataLoader(
             dataset=train_data,
             batch_size=opt.batch_size,

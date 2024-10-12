@@ -16,8 +16,6 @@ def arad_open(file: str) -> np.ndarray:
             img = np.astype(np.asarray(h5py.File(file)["cube"]), np.float32)
             img = img.transpose(0, 2, 1)  # [31, 482, 512]
 
-            img = (img - img.min()) / (img.max() - img.min())
-
             assert (
                 img.shape == mat_shape
             ), f".mat images should have shape: {mat_shape}, found: {img.shape}"
@@ -26,8 +24,6 @@ def arad_open(file: str) -> np.ndarray:
         elif ".jpg" in file:
             img = np.astype(np.asarray(Image.open(file)), np.float32)
             img = img.transpose(2, 0, 1)  # [3, 482, 512]
-
-            img = (img - img.min()) / (img.max() - img.min())
 
             assert (
                 img.shape == jpg_shape
@@ -66,6 +62,10 @@ def produce_input(
     assert input.shape == (34, res[0], res[1])
 
     return input
+
+
+def normalize(x: np.ndarray) -> np.ndarray:
+    return (x - x.min()) / (x.max() - x.min())
 
 
 # We train on image patches and validate on full images
@@ -131,9 +131,13 @@ class TrainDataset(Dataset):
 
         input = produce_input(rgb, spectral, (self.patch_size, self.patch_size))
 
+        input = normalize(input)
+        spectral = np.ascontiguousarray(spectral, np.float32)
+        spectral = normalize(spectral)
+
         # TODO: Maybe add: rotation, horizontal and vertical flip randomly
 
-        return input, np.ascontiguousarray(spectral, np.float32)
+        return input, spectral
 
     def __len__(self):
         return self.patch_per_img * len(self.spectral)
@@ -171,5 +175,8 @@ class ValidationDataset(Dataset):
         self.current_idx = idx
 
         input = produce_input(self.current_rgb, self.current_spectral, (256, 256))
+
+        input = normalize(input)
+        self.current_spectral = normalize(self.current_spectral)
 
         return input, np.ascontiguousarray(self.current_spectral, np.float32)

@@ -1,10 +1,10 @@
 import torch
+from .MST import MST
 
 
 def model_generator(method: str, pretrained_model: str | None = None):
     if method == "mst_plus_plus":
-        model = None
-        print("'mst_plus_plus' not defined yet!")
+        model = MST(dim=31, stage=2, num_blocks=[4, 7, 5])
     else:
         raise Exception(f"No method named {method}")
 

@@ -136,6 +136,7 @@ def main():
             loss.backward()
             optimizer.step()
             scheduler.step()
+            losses.update(loss.data)
             iter += 1
             if iter % 20 == 0:
                 print(

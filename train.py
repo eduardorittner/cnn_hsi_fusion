@@ -23,7 +23,7 @@ parser.add_argument(
     "--outf", type=str, default="./exp/mst-plus-plus", help="path for log files"
 )
 parser.add_argument("--data-root", type=str, default="./data", help="path to dataset")
-parser.add_argument("--disable-cuda", action="store-true")
+parser.add_argument("--disable-cuda", action="store_true")
 opt = parser.parse_args()
 
 if not opt.disable_cuda:

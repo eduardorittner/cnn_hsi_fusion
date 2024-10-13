@@ -1,3 +1,4 @@
+from torch.cuda import is_available
 from dataset import TrainDataset, ValidationDataset
 from utils.loss import Loss_MRAE, Loss_RMSE, Loss_PSNR
 from utils.log import AverageMeter, time2file_name, initialize_logger, save_checkpoint
@@ -22,7 +23,17 @@ parser.add_argument(
     "--outf", type=str, default="./exp/mst-plus-plus", help="path for log files"
 )
 parser.add_argument("--data-root", type=str, default="./data", help="path to dataset")
+parser.add_argument("--disable-cuda", action="store-true")
 opt = parser.parse_args()
+
+if not opt.disable_cuda:
+    if torch.cuda.is_available():
+        device = torch.device("cuda")
+    else:
+        device = torch.device("cpu")
+        print(f"[Warning]: CUDA is not available")
+else:
+    device = torch.device("cpu")
 
 # Load datasets
 
@@ -56,13 +67,10 @@ logger = initialize_logger(logfile)
 
 model = model_generator(opt.model, opt.pretrained_path)
 
-if torch.cuda.is_available():
-    model.cuda()
-    loss_mrae.cuda()
-    loss_rmse.cuda()
-    loss_psnr.cuda()
-else:
-    print("[Warning]: Cuda is not available")
+model = model.to(device)
+loss_mrae = loss_mrae.to(device)
+loss_rmse = loss_rmse.to(device)
+loss_psnr = loss_psnr.to(device)
 
 optimizer = torch.optim.Adam(model.parameters(), lr=4e-4, betas=(0.9, 0.999))
 scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
@@ -88,9 +96,8 @@ def validate(val_loader, model):
 
     # We compute the validation loss on a 256x256 patch on the center of the image
     for i, (input, target) in enumerate(val_loader):
-        if torch.cuda.is_available():
-            input = input.cuda()
-            target = target.cuda()
+        input = input.to(device)
+        target = target.to(device)
         with torch.no_grad():
             output = model(input)
             mrae = loss_mrae(
@@ -132,9 +139,8 @@ def main():
         )
 
         for i, (images, targets) in enumerate(train_loader):
-            if torch.cuda.is_available():
-                images = images.cuda()
-                targets = targets.cuda()
+            images = images.to(device)
+            targets = targets.to(device)
             lr = optimizer.param_groups[0]["lr"]
             optimizer.zero_grad()
             output = model(images)

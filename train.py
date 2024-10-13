@@ -132,6 +132,9 @@ def main():
         )
 
         for i, (images, targets) in enumerate(train_loader):
+            if torch.cuda.is_available():
+                images = images.cuda()
+                targets = targets.cuda()
             lr = optimizer.param_groups[0]["lr"]
             optimizer.zero_grad()
             output = model(images)

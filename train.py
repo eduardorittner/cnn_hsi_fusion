@@ -88,6 +88,9 @@ def validate(val_loader, model):
 
     # We compute the validation loss on a 256x256 patch on the center of the image
     for i, (input, target) in enumerate(val_loader):
+        if torch.cuda.is_available():
+            input = input.cuda()
+            target = target.cuda()
         with torch.no_grad():
             output = model(input)
             mrae = loss_mrae(

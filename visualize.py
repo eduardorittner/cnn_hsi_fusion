@@ -33,10 +33,10 @@ parser.add_argument("--model-path", type=str, help="path to model checkpoint")
 opt = parser.parse_args()
 
 
-def pure_rgb(dataset, idx):
-    dataset.debug = "rgb"
+def pure_rgb(dataset: TrainDataset | ValidationDataset, idx: int):
+    dataset.debug = True
     fig, axs = plt.subplots(2, 2)
-    img = dataset[idx - 1]  # Filename ids are 1-indexed
+    img = dataset[idx - 1][0]  # Filename ids are 1-indexed
     img = (img - img.min()) / (img.max() - img.min())
     axs[0, 0].imshow(img.transpose(1, 2, 0))
     axs[0, 1].imshow(img[0, :, :], cmap="gray")
@@ -46,9 +46,9 @@ def pure_rgb(dataset, idx):
 
 
 def pure_hsi(dataset, idx):
-    dataset.debug = "hsi"
+    dataset.debug = True
     fig, axs = plt.subplots(2, 2)
-    img = dataset[idx - 1]  # Filename ids are 1-indexed
+    img = dataset[idx - 1][1]  # Filename ids are 1-indexed
     img = (img - img.min()) / (img.max() - img.min())
     axs[0, 0].set_title("0")
     axs[0, 0].imshow(img[0, :, :], cmap="gray")
@@ -59,6 +59,10 @@ def pure_hsi(dataset, idx):
     axs[1, 1].set_title("30")
     axs[1, 1].imshow(img[30, :, :], cmap="gray")
     plt.show()
+
+
+def input(dataset, idx):
+    return 0
 
 
 def main():
@@ -75,6 +79,8 @@ def main():
             pure_rgb(dataset, opt.id)
         case "pure-hsi":
             pure_hsi(dataset, opt.id)
+        case "input":
+            input(dataset, opt.id)
 
     return 0
 

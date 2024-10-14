@@ -72,7 +72,12 @@ def normalize(x: np.ndarray) -> np.ndarray:
 
 
 class TrainDataset(Dataset):
-    def __init__(self, data_root: str, patch_size: int, stride: int = 8):
+    def __init__(
+        self,
+        data_root: str,
+        patch_size: int,
+        stride: int = 8,
+    ):
         height, width = 482, 512
         self.data_root = data_root
         self.patch_size = patch_size
@@ -83,6 +88,7 @@ class TrainDataset(Dataset):
         self.vertical_patches = ((height - patch_size) // stride) + 1
         self.horizontal_patches = ((width - patch_size) // stride) + 1
         self.patch_per_img = self.vertical_patches * self.horizontal_patches
+        self.debug: None | str = None
 
         spectral_path = f"{data_root}/Train_spectral/"
         rgb_path = f"{data_root}/Train_RGB/"
@@ -106,6 +112,12 @@ class TrainDataset(Dataset):
         self.rgb = [rgb_path + img for img in rgb_list]
 
     def __getitem__(self, idx):
+        match self.debug:
+            case "rgb":
+                return arad_open(self.rgb[idx])
+            case "hsi":
+                return arad_open(self.spectral[idx])
+
         img_idx, patch_idx = idx // self.patch_per_img, idx % self.patch_per_img
         h_idx, w_idx = (
             patch_idx // self.horizontal_patches,
@@ -134,6 +146,7 @@ class TrainDataset(Dataset):
         input = normalize(input)
         spectral = np.ascontiguousarray(spectral, np.float32)
         spectral = normalize(spectral)
+        print(input.max(), input.min(), spectral.max(), spectral.min())
 
         # TODO: Maybe add: rotation, horizontal and vertical flip randomly
 
@@ -149,6 +162,7 @@ class ValidationDataset(Dataset):
         self.current_spectral: None | np.ndarray = None
         self.current_rgb: None | np.ndarray = None
         self.current_idx: int | None = None
+        self.debug = None
 
         spectral_path = f"{data_root}/Valid_spectral/"
         rgb_path = f"{data_root}/Valid_RGB/"
@@ -170,6 +184,11 @@ class ValidationDataset(Dataset):
         self.rgb = [rgb_path + img for img in rgb_list]
 
     def __getitem__(self, idx):
+        match self.debug:
+            case "rgb":
+                return arad_open(self.rgb[idx])
+            case "hsi":
+                return arad_open(self.spectral[idx])
         self.current_rgb = arad_open(self.rgb[idx])[:, 113:-113, 128:-128]
         self.current_spectral = arad_open(self.spectral[idx])[:, 113:-113, 128:-128]
         self.current_idx = idx

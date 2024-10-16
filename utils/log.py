@@ -1,5 +1,6 @@
 import logging
 import os
+import torch
 
 
 class AverageMeter(object):

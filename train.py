@@ -24,9 +24,10 @@ parser.add_argument(
 )
 parser.add_argument("--data-root", type=str, default="./data", help="path to dataset")
 parser.add_argument("--disable-cuda", action="store_true")
+parser.add_argument("--light", action="store_true")
 opt = parser.parse_args()
 
-if not opt.disable_cuda:
+if not opt.disable_cuda and not opt.light:
     if torch.cuda.is_available():
         device = torch.device("cuda")
     else:
@@ -34,6 +35,11 @@ if not opt.disable_cuda:
         print(f"[Warning]: CUDA is not available")
 else:
     device = torch.device("cpu")
+
+if opt.light:
+    opt.patch_size = 32
+    opt.stride = 32
+    opt.batch_size = 1
 
 # Load datasets
 

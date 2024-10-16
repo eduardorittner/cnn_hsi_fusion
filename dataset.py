@@ -132,19 +132,19 @@ class TrainDataset(Dataset):
             w_idx * self.stride : w_idx * self.stride + self.patch_size,
         ]
 
-        spectral = self.current_spectral[
+        target = self.current_spectral[
             :,
             h_idx * self.stride : h_idx * self.stride + self.patch_size,
             w_idx * self.stride : w_idx * self.stride + self.patch_size,
         ]
 
         rgb = normalize_rgb(rgb)
-        input = produce_input(rgb, spectral, (self.patch_size, self.patch_size))
+        input = produce_input(rgb, target, (self.patch_size, self.patch_size))
 
         # We don't normalize the target since the .mat files are already normalized, and
         # doing it again can run into some issues where spectral.min() == 0. which would
         # then cause the loss to be infinite
-        spectral = np.ascontiguousarray(spectral, np.float32)
+        spectral = np.ascontiguousarray(target, np.float32)
 
         # TODO: Maybe add: rotation, horizontal and vertical flip randomly
 

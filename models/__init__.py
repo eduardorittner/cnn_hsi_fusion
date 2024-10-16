@@ -1,10 +1,13 @@
 import torch
 from .MST import MST
+from .mirnet import MIRNet
 
 
 def model_generator(method: str, pretrained_model: str | None = None):
     if method == "mst_plus_plus":
         model = MST(dim=31, stage=2, num_blocks=[4, 7, 5])
+    elif method == "mirnet":
+        model = MIRNet(in_channels=34)
     else:
         raise Exception(f"No method named {method}")
 

@@ -157,9 +157,6 @@ class TrainDataset(Dataset):
 class ValidationDataset(Dataset):
     def __init__(self, data_root: str):
         self.data_root = data_root
-        self.current_spectral: None | np.ndarray = None
-        self.current_rgb: None | np.ndarray = None
-        self.current_idx: int | None = None
         self.debug = False
 
         spectral_path = f"{data_root}/Valid_spectral/"
@@ -187,12 +184,12 @@ class ValidationDataset(Dataset):
     def __getitem__(self, idx):
         if self.debug:
             return arad_open(self.rgb[idx]), arad_open(self.spectral[idx])
-        self.current_rgb = arad_open(self.rgb[idx])[:, 113:-113, 128:-128]
-        self.current_spectral = arad_open(self.spectral[idx])[:, 113:-113, 128:-128]
+        rgb = arad_open(self.rgb[idx])[:, 113:-113, 128:-128]
+        target = arad_open(self.spectral[idx])[:, 113:-113, 128:-128]
 
-        self.current_rgb = normalize_rgb(self.current_rgb)
-        input = produce_input(self.current_rgb, self.current_spectral, (256, 256))
+        rgb = normalize_rgb(rgb)
+        input = produce_input(rgb, target, (256, 256))
 
         # input = normalize(input)
 
-        return input, np.ascontiguousarray(self.current_spectral, np.float32)
+        return input, np.ascontiguousarray(target, np.float32)

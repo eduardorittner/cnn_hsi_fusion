@@ -2,6 +2,7 @@ import torch
 from .MST import MST
 from .MST_Plus_Plus import MST_Plus_Plus
 from .mirnet import MIRNet
+from .restormer import Restormer
 
 
 def model_generator(method: str, pretrained_model: str | None = None):
@@ -11,6 +12,8 @@ def model_generator(method: str, pretrained_model: str | None = None):
         model = MST_Plus_Plus()
     elif method == "mirnet":
         model = MIRNet(in_channels=34)
+    elif method == "restormer":
+        model = Restormer(inp_channels=34)
     else:
         raise Exception(f"No method named {method}")
 

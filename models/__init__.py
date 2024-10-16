@@ -3,6 +3,7 @@ from .MST import MST
 from .MST_Plus_Plus import MST_Plus_Plus
 from .mirnet import MIRNet
 from .restormer import Restormer
+from .hinet import HINet
 
 
 def model_generator(method: str, pretrained_model: str | None = None):
@@ -14,6 +15,8 @@ def model_generator(method: str, pretrained_model: str | None = None):
         model = MIRNet(in_channels=34)
     elif method == "restormer":
         model = Restormer(inp_channels=34)
+    elif method == "hinet":
+        model = HINet(in_chn=31)
     else:
         raise Exception(f"No method named {method}")
 

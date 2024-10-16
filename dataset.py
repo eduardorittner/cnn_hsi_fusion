@@ -181,6 +181,9 @@ class ValidationDataset(Dataset):
         self.spectral = [spectral_path + img for img in spectral_list]
         self.rgb = [rgb_path + img for img in rgb_list]
 
+    def __len__(self):
+        return len(self.rgb)
+
     def __getitem__(self, idx):
         if self.debug:
             return arad_open(self.rgb[idx]), arad_open(self.spectral[idx])

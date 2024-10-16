@@ -1,8 +1,12 @@
 import argparse
+import math
 from os import path
+from models import model_generator
 import glob
 from dataset import ValidationDataset, TrainDataset
 import matplotlib.pyplot as plt
+import torch
+import numpy as np
 
 # CLI Arguments
 
@@ -28,41 +32,75 @@ parser.add_argument(
 """,
 )
 parser.add_argument("--id", type=int, default=1, help="Image id")
-parser.add_argument("--model", type=str, help="model name")
+parser.add_argument("--model", type=str, default="mst_plus_plus", help="model name")
 parser.add_argument("--model-path", type=str, help="path to model checkpoint")
 opt = parser.parse_args()
 
 
+def visualize_image(img: np.ndarray, bands: int):
+    if img.shape[0] < bands:
+        raise Exception(
+            f"[ERROR]: tried to visualize {bands} bands but image has {img.shape[0]}"
+        )
+
+    plt_dims = math.ceil(math.sqrt(bands))
+
+    fig, axs = plt.subplots(plt_dims, plt_dims)
+    i, j = 0, 0
+    stride = img.shape[0] // bands
+    for i in range(plt_dims):
+        for j in range(plt_dims):
+            if (i * plt_dims + j) < bands:
+                band = stride * (i * plt_dims + j)
+                axs[i, j].set_title(f"band: {band}")
+                axs[i, j].imshow(img[band, :, :])
+            else:
+                break
+    plt.show()
+
+
 def pure_rgb(dataset: TrainDataset | ValidationDataset, idx: int):
     dataset.debug = True
-    fig, axs = plt.subplots(2, 2)
     img = dataset[idx - 1][0]  # Filename ids are 1-indexed
     img = (img - img.min()) / (img.max() - img.min())
-    axs[0, 0].imshow(img.transpose(1, 2, 0))
-    axs[0, 1].imshow(img[0, :, :], cmap="gray")
-    axs[1, 0].imshow(img[1, :, :], cmap="gray")
-    axs[1, 1].imshow(img[2, :, :], cmap="gray")
-    plt.show()
+    visualize_image(img, 3)
 
 
-def pure_hsi(dataset, idx):
+def pure_hsi(dataset: TrainDataset | ValidationDataset, idx: int):
     dataset.debug = True
-    fig, axs = plt.subplots(2, 2)
     img = dataset[idx - 1][1]  # Filename ids are 1-indexed
     img = (img - img.min()) / (img.max() - img.min())
-    axs[0, 0].set_title("0")
-    axs[0, 0].imshow(img[0, :, :], cmap="gray")
-    axs[0, 1].set_title("10")
-    axs[0, 1].imshow(img[10, :, :], cmap="gray")
-    axs[1, 0].set_title("20")
-    axs[1, 0].imshow(img[20, :, :], cmap="gray")
-    axs[1, 1].set_title("30")
-    axs[1, 1].imshow(img[30, :, :], cmap="gray")
-    plt.show()
+    visualize_image(img, 4)
 
 
-def input(dataset, idx):
-    return 0
+def input(dataset: TrainDataset | ValidationDataset, idx: int):
+    if isinstance(dataset, TrainDataset):
+        idx = (idx - 1) * dataset.patch_per_img
+    else:
+        idx -= 1
+    img = dataset[(idx)][0]
+    visualize_image(img, 4)
+
+
+def predict(
+    dataset: TrainDataset | ValidationDataset,
+    idx: int,
+    model_name: str,
+    model_path: None | str,
+):
+    if isinstance(dataset, TrainDataset):
+        idx = (idx - 1) * dataset.patch_per_img
+    else:
+        idx -= 1
+    img = dataset[(idx)][0]
+    img = torch.from_numpy(img)
+    img = img.unsqueeze(0)
+
+    model = model_generator(model_name, model_path)
+    with torch.no_grad():
+        img = model(img).squeeze()
+
+    visualize_image(img, 4)
 
 
 def main():
@@ -81,6 +119,8 @@ def main():
             pure_hsi(dataset, opt.id)
         case "input":
             input(dataset, opt.id)
+        case "predict":
+            predict(dataset, opt.id, opt.model, opt.model_path)
 
     return 0
 

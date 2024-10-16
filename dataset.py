@@ -64,8 +64,8 @@ def produce_input(
     return input
 
 
-def normalize(x: np.ndarray) -> np.ndarray:
-    return (x - x.min()) / (x.max() - x.min())
+def normalize_rgb(x: np.ndarray) -> np.ndarray:
+    return x / 255
 
 
 # We train on image patches and validate on full images
@@ -138,9 +138,9 @@ class TrainDataset(Dataset):
             w_idx * self.stride : w_idx * self.stride + self.patch_size,
         ]
 
+        rgb = normalize_rgb(rgb)
         input = produce_input(rgb, spectral, (self.patch_size, self.patch_size))
 
-        input = normalize(input)
         # We don't normalize the target since the .mat files are already normalized, and
         # doing it again can run into some issues where spectral.min() == 0. which would
         # then cause the loss to be infinite
@@ -189,10 +189,10 @@ class ValidationDataset(Dataset):
             return arad_open(self.rgb[idx]), arad_open(self.spectral[idx])
         self.current_rgb = arad_open(self.rgb[idx])[:, 113:-113, 128:-128]
         self.current_spectral = arad_open(self.spectral[idx])[:, 113:-113, 128:-128]
-        self.current_idx = idx
 
+        self.current_rgb = normalize_rgb(self.current_rgb)
         input = produce_input(self.current_rgb, self.current_spectral, (256, 256))
 
-        input = normalize(input)
+        # input = normalize(input)
 
         return input, np.ascontiguousarray(self.current_spectral, np.float32)

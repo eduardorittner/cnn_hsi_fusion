@@ -121,6 +121,10 @@ def main():
             input(dataset, opt.id)
         case "predict":
             predict(dataset, opt.id, opt.model, opt.model_path)
+        case "target":
+            raise Exception("Not implemented")
+        case "error":
+            raise Exception("Not implemented")
 
     return 0
 

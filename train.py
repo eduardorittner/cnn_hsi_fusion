@@ -88,7 +88,7 @@ if opt.pretrained_path:
         optimizer.load_state_dict(checkpoint["optimizer"])
 
 
-def validate(val_loader, model):
+def validate(model, val_loader: DataLoader):
     model.eval()
     losses_mrae = AverageMeter()
     losses_rmse = AverageMeter()
@@ -100,15 +100,9 @@ def validate(val_loader, model):
         target = target.to(device)
         with torch.no_grad():
             output = model(input)
-            mrae = loss_mrae(
-                output[:, :, 128:-128, 128:-128], target[:, :, 128:-128, 128:-128]
-            )
-            rmse = loss_rmse(
-                output[:, :, 128:-128, 128:-128], target[:, :, 128:-128, 128:-128]
-            )
-            psnr = loss_psnr(
-                output[:, :, 128:-128, 128:-128], target[:, :, 128:-128, 128:-128]
-            )
+            mrae = loss_mrae(output, target)
+            rmse = loss_rmse(output, target)
+            psnr = loss_psnr(output, target)
         losses_mrae.update(mrae.data)
         losses_rmse.update(rmse.data)
         losses_psnr.update(psnr.data)

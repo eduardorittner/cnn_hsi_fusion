@@ -154,6 +154,8 @@ def main():
             target(dataset, opt.id)
         case "error":
             error(dataset, opt.id, opt.model, opt.model_path)
+        case _:
+            raise Exception(f"No stage named {opt.stage}")
 
     return 0
 

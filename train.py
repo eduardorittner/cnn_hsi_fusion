@@ -149,15 +149,15 @@ def main():
                     f"[iter:{iter}/{total_iters}], lr={lr}, losses average: {losses.avg}"
                 )
 
-            if iter % 1000 == 0:
-                mrae_loss, rmse_loss, psnr_loss = validate(val_loader, model)
+            if iter % iters_per_epoch == 0:
+                mrae_loss, rmse_loss, psnr_loss = validate(model, val_loader)
                 if (
                     torch.abs(mrae_loss - record_mrae_loss) < 0.01
                     or mrae_loss < record_mrae_loss
                     or iter % 5000 == 0
                 ):
                     print(f"Saving to checkpoint: {logfile}")
-                    save_checkpoint(logfile, (iter // 1000), iter, model, optimizer)
+                    save_checkpoint(logdir, (iter // 1000), iter, model, optimizer)
                     if mrae_loss < record_mrae_loss:
                         record_mrae_loss = mrae_loss
 

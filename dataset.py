@@ -143,7 +143,6 @@ class TrainDataset(Dataset):
         input = normalize(input)
         spectral = np.ascontiguousarray(spectral, np.float32)
         spectral = normalize(spectral)
-        print(input.max(), input.min(), spectral.max(), spectral.min())
 
         # TODO: Maybe add: rotation, horizontal and vertical flip randomly
 

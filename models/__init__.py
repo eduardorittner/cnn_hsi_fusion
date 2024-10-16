@@ -5,6 +5,7 @@ from .mirnet import MIRNet
 from .restormer import Restormer
 from .hinet import HINet
 from .mprnet import MPRNet
+from .hdnet import HDNet
 
 
 def model_generator(method: str, pretrained_model: str | None = None):
@@ -20,6 +21,8 @@ def model_generator(method: str, pretrained_model: str | None = None):
         model = HINet(in_chn=31)
     elif method == "mprnet":
         model = MPRNet(in_c=31)
+    elif method == "hdnet":
+        model = HDNet(in_ch=34)
     else:
         raise Exception(f"No method named {method}")
 

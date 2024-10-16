@@ -141,8 +141,10 @@ class TrainDataset(Dataset):
         input = produce_input(rgb, spectral, (self.patch_size, self.patch_size))
 
         input = normalize(input)
+        # We don't normalize the target since the .mat files are already normalized, and
+        # doing it again can run into some issues where spectral.min() == 0. which would
+        # then cause the loss to be infinite
         spectral = np.ascontiguousarray(spectral, np.float32)
-        spectral = normalize(spectral)
 
         # TODO: Maybe add: rotation, horizontal and vertical flip randomly
 
@@ -189,6 +191,5 @@ class ValidationDataset(Dataset):
         input = produce_input(self.current_rgb, self.current_spectral, (256, 256))
 
         input = normalize(input)
-        self.current_spectral = normalize(self.current_spectral)
 
         return input, np.ascontiguousarray(self.current_spectral, np.float32)

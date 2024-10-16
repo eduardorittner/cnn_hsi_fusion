@@ -103,6 +103,35 @@ def predict(
     visualize_image(img, 4)
 
 
+def target(dataset: TrainDataset | ValidationDataset, idx: int):
+    if isinstance(dataset, TrainDataset):
+        idx = (idx - 1) * dataset.patch_per_img
+    else:
+        idx -= 1
+    img = dataset[(idx)][1]
+
+    visualize_image(img, 4)
+
+
+def error(dataset: TrainDataset | ValidationDataset, idx: int, model_name, model_path):
+    if isinstance(dataset, TrainDataset):
+        idx = (idx - 1) * dataset.patch_per_img
+    else:
+        idx -= 1
+    input, target = dataset[(idx)]
+    input, target = torch.from_numpy(input), torch.from_numpy(target)
+    input = input.unsqueeze(0)
+
+    model = model_generator(model_name, model_path)
+    with torch.no_grad():
+        output = model(input).squeeze()
+
+    error = torch.abs(output - target) / target
+    error = error.numpy(force=True)
+
+    visualize_image(error, 4)
+
+
 def main():
     match opt.split:
         case "training":
@@ -122,9 +151,9 @@ def main():
         case "predict":
             predict(dataset, opt.id, opt.model, opt.model_path)
         case "target":
-            raise Exception("Not implemented")
+            target(dataset, opt.id)
         case "error":
-            raise Exception("Not implemented")
+            error(dataset, opt.id, opt.model, opt.model_path)
 
     return 0
 

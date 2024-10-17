@@ -138,14 +138,12 @@ def main():
             iter += 1
             if iter % 20 == 0:
                 print(
-                    f"[iter:{iter}/{total_iters}], lr={lr}, losses average: {losses.avg}"
+                    f"[iter:{iter}/{total_iters}], lr={lr:.5f}, losses average: {losses.avg:.5f}"
                 )
 
             if iter % iters_per_epoch == 0:
                 val_losses = validate(model, val_loader, device, loss_fns)
                 mrae_loss = val_losses["mrae"]
-                rmse_loss = val_losses["rmse"]
-                psnr_loss = val_losses["psnr"]
                 if (
                     torch.abs(mrae_loss - record_mrae_loss) < 0.01
                     or mrae_loss < record_mrae_loss
@@ -156,10 +154,12 @@ def main():
                     if mrae_loss < record_mrae_loss:
                         record_mrae_loss = mrae_loss
 
-                print(
-                    f"""iter: {iter}/{total_iters}, lr: {lr}
-                    Train MRAE: {losses.avg}, Test MRAE: {mrae_loss}, Test RMSE: {rmse_loss}, Test PSNR: {psnr_loss}"""
-                )
+                string = ""
+                for loss, value in val_losses.items():
+                    string += ", Test " + loss + f": {value:.5f}"
+
+                print(f"iter: {iter}/{total_iters}, lr: {lr:.5f}")
+                print(f"Train MRAE: {losses.avg}{string}")
                 logger.info(
                     f"iter: {iter}/{total_iters}, epoch: {total_iters//1000}, lr: {lr} Train MRAE: {losses.avg}, Test MRAE: {mrae_loss}, Test RMSE: {rmse_loss}, Test PSNR: {psnr_loss}"
                 )

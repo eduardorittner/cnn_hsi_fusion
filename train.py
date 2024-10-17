@@ -1,6 +1,6 @@
 from torch.cuda import is_available
 from dataset import TrainDataset, ValidationDataset
-from utils.loss import Loss_MRAE, Loss_RMSE, Loss_PSNR
+from utils.loss import Loss_MRAE, Loss_RMSE, Loss_PSNR, Loss_SSIM, Loss_SAM
 from utils.log import AverageMeter, time2file_name, initialize_logger, save_checkpoint
 from torch.utils.data import DataLoader
 from models import *
@@ -60,6 +60,8 @@ total_iters = iters_per_epoch * opt.end_epoch
 loss_mrae = Loss_MRAE()
 loss_rmse = Loss_RMSE()
 loss_psnr = Loss_PSNR()
+loss_ssim = Loss_SSIM()
+loss_sam = Loss_SAM()
 
 # Logger
 
@@ -79,6 +81,8 @@ loss_fns = {
     "mrae": loss_mrae.to(device),
     "rmse": loss_rmse.to(device),
     "psnr": loss_psnr.to(device),
+    "ssim": loss_ssim.to(device),
+    "sam": loss_sam.to(device),
 }
 
 optimizer = torch.optim.Adam(model.parameters(), lr=4e-4, betas=(0.9, 0.999))

@@ -8,6 +8,7 @@ import argparse
 import datetime
 import os
 import torch
+from validate import validate
 
 
 # CLI Arguments
@@ -74,9 +75,11 @@ logger = initialize_logger(logfile)
 model = model_generator(opt.model, opt.pretrained_path)
 
 model = model.to(device)
-loss_mrae = loss_mrae.to(device)
-loss_rmse = loss_rmse.to(device)
-loss_psnr = loss_psnr.to(device)
+loss_fns = {
+    "mrae": loss_mrae.to(device),
+    "rmse": loss_rmse.to(device),
+    "psnr": loss_psnr.to(device),
+}
 
 optimizer = torch.optim.Adam(model.parameters(), lr=4e-4, betas=(0.9, 0.999))
 scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
@@ -92,27 +95,6 @@ if opt.pretrained_path:
         start_epoch, iter = checkpoint["epoch"], checkpoint["iter"]
         model.load_state_dict(checkpoint["state_dict"])
         optimizer.load_state_dict(checkpoint["optimizer"])
-
-
-def validate(model, val_loader: DataLoader):
-    model.eval()
-    losses_mrae = AverageMeter()
-    losses_rmse = AverageMeter()
-    losses_psnr = AverageMeter()
-
-    # We compute the validation loss on a 256x256 patch on the center of the image
-    for i, (input, target) in enumerate(val_loader):
-        input = input.to(device)
-        target = target.to(device)
-        with torch.no_grad():
-            output = model(input)
-            mrae = loss_mrae(output, target)
-            rmse = loss_rmse(output, target)
-            psnr = loss_psnr(output, target)
-        losses_mrae.update(mrae.data)
-        losses_rmse.update(rmse.data)
-        losses_psnr.update(psnr.data)
-    return losses_mrae.avg, losses_rmse.avg, losses_psnr.avg
 
 
 def main():
@@ -156,7 +138,10 @@ def main():
                 )
 
             if iter % iters_per_epoch == 0:
-                mrae_loss, rmse_loss, psnr_loss = validate(model, val_loader)
+                val_losses = validate(model, val_loader, device, loss_fns)
+                mrae_loss = val_losses["mrae"]
+                rmse_loss = val_losses["rmse"]
+                psnr_loss = val_losses["psnr"]
                 if (
                     torch.abs(mrae_loss - record_mrae_loss) < 0.01
                     or mrae_loss < record_mrae_loss

@@ -3,6 +3,7 @@ from dataset import TrainDataset, ValidationDataset
 from utils.loss import Loss_MRAE, Loss_RMSE, Loss_PSNR, Loss_SSIM, Loss_SAM
 from utils.log import AverageMeter, time2file_name, initialize_logger, save_checkpoint
 from torch.utils.data import DataLoader
+from torch import nn
 from models import *
 import argparse
 import datetime
@@ -158,14 +159,14 @@ def main():
                     if mrae_loss < record_mrae_loss:
                         record_mrae_loss = mrae_loss
 
-                string = ""
+                test_loss = ""
                 for loss, value in val_losses.items():
-                    string += ", Test " + loss + f": {value:.5f}"
+                    test_loss += ", Test " + loss + f": {value:.5f}"
 
                 print(f"iter: {iter}/{total_iters}, lr: {lr:.5f}")
-                print(f"Train MRAE: {losses.avg}{string}")
+                print(f"Train MRAE: {losses.avg}{test_loss}")
                 logger.info(
-                    f"iter: {iter}/{total_iters}, epoch: {total_iters//1000}, lr: {lr} Train MRAE: {losses.avg}, Test MRAE: {mrae_loss}, Test RMSE: {rmse_loss}, Test PSNR: {psnr_loss}"
+                    f"iter: {iter}/{total_iters}, epoch: {total_iters//1000}, lr: {lr} Train MRAE: {losses.avg}{test_loss}"
                 )
 
 

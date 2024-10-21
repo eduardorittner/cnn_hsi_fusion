@@ -77,6 +77,7 @@ logger = initialize_logger(logfile)
 
 # Load model
 
+torch.set_float32_matmul_precision("medium")
 model = model_generator(opt.model, opt.pretrained_path)
 
 model = model.to(device)

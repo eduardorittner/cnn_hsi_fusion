@@ -21,9 +21,7 @@ parser.add_argument("--batch-size", type=int, default=20)
 parser.add_argument("--patch-size", type=int, default=128)
 parser.add_argument("--stride", type=int, default=8)
 parser.add_argument("--end-epoch", type=int, default=300)
-parser.add_argument(
-    "--outf", type=str, default="./exp/mst-plus-plus", help="path for log files"
-)
+parser.add_argument("--outf", type=str, default="./exp/", help="path for log files")
 parser.add_argument("--data-root", type=str, default="./data", help="path to dataset")
 parser.add_argument("--disable-cuda", action="store_true")
 parser.add_argument(
@@ -71,7 +69,7 @@ loss_sam = Loss_SAM()
 # Logger
 
 date_time = time2file_name(str(datetime.datetime.now()))
-logdir = opt.outf + date_time
+logdir = opt.outf + opt.model + date_time
 if not os.path.exists(logdir):
     os.makedirs(logdir)
 logfile = os.path.join(logdir, "train.log")

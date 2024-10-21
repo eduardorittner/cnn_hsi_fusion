@@ -10,6 +10,7 @@ import datetime
 import os
 import torch
 from validate import validate
+from typing import Callable, Dict
 
 
 # CLI Arguments
@@ -28,6 +29,11 @@ parser.add_argument(
     "--light",
     action="store_true",
     help="For running single batch small patches on the cpu",
+)
+parser.add_argument(
+    "--test",
+    action="store_true",
+    help="For testing. A pretrained-path must be provided",
 )
 opt = parser.parse_args()
 
@@ -68,16 +74,21 @@ loss_sam = Loss_SAM()
 
 # Logger
 
-date_time = time2file_name(str(datetime.datetime.now()))
-logdir = opt.outf + opt.model + date_time
-if not os.path.exists(logdir):
-    os.makedirs(logdir)
-logfile = os.path.join(logdir, "train.log")
-logger = initialize_logger(logfile)
+if not opt.test:
+    date_time = time2file_name(str(datetime.datetime.now()))
+    logdir = opt.outf + opt.model + date_time
+    if not os.path.exists(logdir):
+        os.makedirs(logdir)
+    logfile = os.path.join(logdir, "train.log")
+    logger = initialize_logger(logfile)
 
 # Load model
 
 torch.set_float32_matmul_precision("medium")
+
+if opt.test and not opt.pretrained_path:
+    print("Warning: Testing an untrained model")
+
 model = model_generator(opt.model, opt.pretrained_path)
 
 model = model.to(device)
@@ -105,7 +116,27 @@ if opt.pretrained_path:
         optimizer.load_state_dict(checkpoint["optimizer"])
 
 
+def test(model: nn.Module, device: torch.device, loss_fns: Dict[str, Callable]):
+    val_loader = DataLoader(
+        dataset=val_data,
+        batch_size=1,
+        shuffle=False,
+        num_workers=2,
+        pin_memory=True,
+    )
+
+    val_losses = validate(model, val_loader, device, loss_fns)
+    test_loss = ""
+    for loss, value in val_losses.items():
+        test_loss += "Test " + loss + f": {value:.5f} | "
+
+    print(test_loss)
+
+
 def main():
+    if opt.test:
+        test(model, device, loss_fns)
+        return 0
     global iter
     torch.backends.cudnn.benchmark = True
     record_mrae_loss = 1000
@@ -162,10 +193,14 @@ def main():
                 for loss, value in val_losses.items():
                     test_loss += ", Test " + loss + f": {value:.5f}"
 
+                test_loss_log = ""
+                for loss, value in val_losses.items():
+                    test_loss_log += ", Test " + loss + f": {value}"
+
                 print(f"iter: {iter}/{total_iters}, lr: {lr:.5f}")
                 print(f"Train MRAE: {losses.avg}{test_loss}")
                 logger.info(
-                    f"iter: {iter}/{total_iters}, epoch: {total_iters//1000}, lr: {lr} Train MRAE: {losses.avg}{test_loss}"
+                    f"iter: {iter}/{total_iters}, epoch: {total_iters//1000}, lr: {lr} Train MRAE: {losses.avg}{test_loss_log}"
                 )
 
                 if iter > total_iters:

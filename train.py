@@ -110,7 +110,7 @@ def main():
     global iter
     torch.backends.cudnn.benchmark = True
     record_mrae_loss = 1000
-    while iter < total_iters:
+    while True:  # We exit this loop from inside the for loop so the check is there
         model.train()
         losses = AverageMeter()
         train_loader = DataLoader(
@@ -146,7 +146,7 @@ def main():
                     f"[iter:{iter}/{total_iters}], lr={lr:.5f}, losses average: {losses.avg:.5f}"
                 )
 
-            if iter % iters_per_epoch == 0:
+            if iter % iters_per_epoch == 0 or iter < total_iters:
                 val_losses = validate(model, val_loader, device, loss_fns)
                 mrae_loss = val_losses["mrae"]
                 if (
@@ -169,6 +169,8 @@ def main():
                     f"iter: {iter}/{total_iters}, epoch: {total_iters//1000}, lr: {lr} Train MRAE: {losses.avg}{test_loss}"
                 )
 
+                if iter < total_iters:
+                    return 0
 
 if __name__ == "__main__":
     main()

@@ -186,7 +186,7 @@ def main():
             losses.update(loss.data)
             iter += 1
             if iter % iters_per_update == 0:
-                elapsed_time += time.time() - start_time
+                elapsed_time = time.time() - start_time
                 predicted_time = (total_iters / iter) * elapsed_time
                 time_left = predicted_time - elapsed_time
 

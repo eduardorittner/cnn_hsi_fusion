@@ -150,6 +150,7 @@ def main():
     global iter
     torch.backends.cudnn.benchmark = True
     record_mrae_loss = 1000
+    epochs_since_record = 0
     start_time = time.time()
     elapsed_time = 0
 
@@ -196,14 +197,30 @@ def main():
             if iter % iters_per_epoch == 0 or iter > total_iters:
                 val_losses = validate(model, val_loader, device, loss_fns)
                 mrae_loss = val_losses["mrae"]
-                if (
+                if iter % 5 * iters_per_epoch == 0 and (
                     torch.abs(mrae_loss - record_mrae_loss) < 0.01
                     or mrae_loss < record_mrae_loss
                 ):
                     print(f"Saving to checkpoint: {logfile}")
-                    save_checkpoint(logdir, (iter // 1000), iter, model, optimizer)
+                    save_checkpoint(
+                        logdir, (iter // iters_per_epoch), iter, model, optimizer
+                    )
                     if mrae_loss < record_mrae_loss:
                         record_mrae_loss = mrae_loss
+                        epochs_since_record = 0
+                    else:
+                        epochs_since_record += 1
+                else:
+                    epochs_since_record += 1
+
+                if epochs_since_record == 10:
+                    print(
+                        "10 epochs since mrae validation loss improved, stopping now."
+                    )
+                    save_checkpoint(
+                        logdir, (iter // iters_per_epoch), iter, model, optimizer
+                    )
+                    return 0
 
                 test_loss = ""
                 for loss, value in val_losses.items():

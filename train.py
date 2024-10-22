@@ -196,7 +196,6 @@ def main():
                 if (
                     torch.abs(mrae_loss - record_mrae_loss) < 0.01
                     or mrae_loss < record_mrae_loss
-                    or iter % 5000 == 0
                 ):
                     print(f"Saving to checkpoint: {logfile}")
                     save_checkpoint(logdir, (iter // 1000), iter, model, optimizer)
@@ -214,7 +213,7 @@ def main():
                 print(f"iter: {iter}/{total_iters}, lr: {lr:.5f}")
                 print(f"Train MRAE: {losses.avg}{test_loss}")
                 logger.info(
-                    f"iter: {iter}/{total_iters}, epoch: {total_iters//1000}, lr: {lr} Train MRAE: {losses.avg}{test_loss_log}"
+                    f"iter: {iter}/{total_iters}, epoch: {total_iters//iters_per_epoch}, lr: {lr} Train MRAE: {losses.avg}{test_loss_log}"
                 )
 
                 if iter > total_iters:

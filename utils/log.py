@@ -74,3 +74,16 @@ def record_loss(loss_csv, epoch, iteration, epoch_time, lr, train_loss, test_los
     )
     loss_csv.flush()
     loss_csv.close
+
+
+def format_interval_sec(s: float) -> str:
+    s = int(s)
+    hours = s // 3600
+    minutes = s // 60
+    seconds = s % 60
+
+    return (
+        "{:02d}h:".format(hours)
+        + "{:02d}m:".format(minutes)
+        + "{:02d}s".format(seconds)
+    )

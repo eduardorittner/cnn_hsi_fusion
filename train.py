@@ -1,13 +1,20 @@
 from torch.cuda import is_available
 from dataset import TrainDataset, ValidationDataset
 from utils.loss import Loss_MRAE, Loss_RMSE, Loss_PSNR, Loss_SSIM, Loss_SAM
-from utils.log import AverageMeter, time2file_name, initialize_logger, save_checkpoint
+from utils.log import (
+    AverageMeter,
+    time2file_name,
+    initialize_logger,
+    save_checkpoint,
+    format_interval_sec,
+)
 from torch.utils.data import DataLoader
 from torch import nn
 from models import *
 import argparse
 import datetime
 import os
+import time
 import torch
 from validate import validate
 from typing import Callable, Dict
@@ -140,6 +147,9 @@ def main():
     global iter
     torch.backends.cudnn.benchmark = True
     record_mrae_loss = 1000
+    start_time = time.time()
+    elapsed_time = 0
+
     while True:  # We exit this loop from inside the for loop so the check is there
         model.train()
         losses = AverageMeter()
@@ -172,8 +182,12 @@ def main():
             losses.update(loss.data)
             iter += 1
             if iter % 20 == 0:
+                elapsed_time += time.time() - start_time
+                predicted_time = (total_iters / iter) * elapsed_time
+                time_left = predicted_time - elapsed_time
+
                 print(
-                    f"[iter:{iter}/{total_iters}], lr={lr:.5f}, losses average: {losses.avg:.5f}"
+                    f"[iter:{iter}/{total_iters}], lr={lr:.5f}, losses average: {losses.avg:.5f}, {format_interval_sec(elapsed_time)} passed, {format_interval_sec(time_left)} to go"
                 )
 
             if iter % iters_per_epoch == 0 or iter > total_iters:

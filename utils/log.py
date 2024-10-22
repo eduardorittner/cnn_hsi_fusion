@@ -79,7 +79,7 @@ def record_loss(loss_csv, epoch, iteration, epoch_time, lr, train_loss, test_los
 def format_interval_sec(s: float) -> str:
     s = int(s)
     hours = s // 3600
-    minutes = s // 60
+    minutes = (s // 60) % 60
     seconds = s % 60
 
     return (

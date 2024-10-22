@@ -54,6 +54,8 @@ def plot(
             axs[0, i].plot(epochs, data[i, :])
             axs[0, i].set_title(loss)
 
+    plt.show()
+
     return fig, axs
 
 

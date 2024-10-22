@@ -69,8 +69,10 @@ val_data = ValidationDataset(data_root=opt.data_root)
 
 iter = 0
 iters_per_update = 100
-iters_per_epoch = 1000
+iters_per_epoch = len(train_data) // opt.batch_size
 total_iters = iters_per_epoch * opt.end_epoch
+
+print(f"{iters_per_epoch} iterations per epoch")
 
 # Loss functions
 

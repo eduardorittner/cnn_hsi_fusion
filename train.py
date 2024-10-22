@@ -68,6 +68,7 @@ val_data = ValidationDataset(data_root=opt.data_root)
 # Iteration numbers
 
 iter = 0
+iters_per_update = 100
 iters_per_epoch = 1000
 total_iters = iters_per_epoch * opt.end_epoch
 
@@ -181,7 +182,7 @@ def main():
             scheduler.step()
             losses.update(loss.data)
             iter += 1
-            if iter % 20 == 0:
+            if iter % iters_per_update == 0:
                 elapsed_time += time.time() - start_time
                 predicted_time = (total_iters / iter) * elapsed_time
                 time_left = predicted_time - elapsed_time

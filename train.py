@@ -197,8 +197,9 @@ def main():
             if iter % iters_per_epoch == 0 or iter > total_iters:
                 val_losses = validate(model, val_loader, device, loss_fns)
                 mrae_loss = val_losses["mrae"]
-                if iter % 5 * iters_per_epoch == 0 and (
-                    torch.abs(mrae_loss - record_mrae_loss) < 0.01
+                if (
+                    iter % (5 * iters_per_epoch) == 0
+                    or torch.abs(mrae_loss - record_mrae_loss) < 0.01
                     or mrae_loss < record_mrae_loss
                 ):
                     print(f"Saving to checkpoint: {logfile}")

@@ -30,10 +30,10 @@ def read_log(file: str, loss_keys: list[str]) -> tuple[np.ndarray, np.ndarray]:
             for j, loss in enumerate(loss_keys):
                 loss_start = line.find(loss) + len(loss) + 2
                 if line[loss_start:].find(",") == -1:
-                    losses[j][i] = float(line[loss_start:])
+                    losses[j + 1][i] = float(line[loss_start:])
                 else:
                     loss_end = loss_start + line[loss_start:].find(",")
-                    losses[j][i] = float(line[loss_start:loss_end])
+                    losses[j + 1][i] = float(line[loss_start:loss_end])
 
     return epochs, losses
 
@@ -79,7 +79,9 @@ def main():
 
     losses = opt.losses.split(" ")
     epochs, data = read_log(opt.log, losses)
-    fig, axs = plot(epochs, data, opt.name, losses)
+
+    print(data.shape)
+    fig, axs = plot(epochs, data, opt.name, ["train mrae", *losses])
 
     if opt.dir:
         plot_file = path.join(opt.dir, opt.name)

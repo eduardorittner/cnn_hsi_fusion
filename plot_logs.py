@@ -9,6 +9,7 @@ from os import path
 def read_log(file: str, loss_keys: list[str]) -> tuple[np.ndarray, np.ndarray]:
     iter_string = "iter: "
     train_loss_str = "Train"
+    iters_per_epoch = None
 
     with open(file, "r") as f:
         lines = f.readlines()
@@ -18,7 +19,10 @@ def read_log(file: str, loss_keys: list[str]) -> tuple[np.ndarray, np.ndarray]:
         for i, line in enumerate(lines):
             iter_start = line.find(iter_string) + len(iter_string)
             iter_end = line.find("/")
-            epochs[i] = int(line[iter_start:iter_end]) // 1000
+            if not iters_per_epoch:
+                iters_per_epoch = int(line[iter_start:iter_end])
+
+            epochs[i] = int(line[iter_start:iter_end]) // iters_per_epoch
 
             train_loss_start = line.find(train_loss_str)
             train_loss_start += line[train_loss_start:].find(":") + 2

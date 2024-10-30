@@ -34,6 +34,11 @@ parser.add_argument(
 parser.add_argument("--id", type=int, default=1, help="Image id")
 parser.add_argument("--model", type=str, default="mst_plus_plus", help="model name")
 parser.add_argument("--model-path", type=str, help="path to model checkpoint")
+parser.add_argument(
+    "--no-norm",
+    action="store_true",
+    help="Whether visualized output should be normalized or not",
+)
 opt = parser.parse_args()
 
 
@@ -53,7 +58,9 @@ def visualize_image(img: np.ndarray, bands: int):
             if (i * plt_dims + j) < bands:
                 band = stride * (i * plt_dims + j)
                 axs[i, j].set_title(f"band: {band}")
-                axs[i, j].imshow(img[band, :, :])
+                vmin = 0.0 if opt.no_norm else img[band, :, :].min()
+                vmax = 1.0 if opt.no_norm else img[band, :, :].max()
+                axs[i, j].imshow(img[band, :, :], vmin=vmin, vmax=vmax)
             else:
                 break
     plt.show()

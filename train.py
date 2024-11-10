@@ -8,6 +8,7 @@ from utils.log import (
     save_checkpoint,
     format_interval_sec,
 )
+from utils.img import arad_save_hsi
 from torch.utils.data import DataLoader
 from torch import nn
 from models import *
@@ -41,6 +42,14 @@ parser.add_argument(
     "--test",
     action="store_true",
     help="For testing. A pretrained-path must be provided",
+)
+parser.add_argument(
+    "--save",
+    action="store_true",
+    help="For testing and saving results. A pretrained-path must be provided",
+)
+parser.add_argument(
+    "--save-dir", type=str, default="results/", help="Where predicted images are saved."
 )
 opt = parser.parse_args()
 
@@ -86,10 +95,14 @@ loss_sam = Loss_SAM()
 
 if not opt.test:
     date_time = time2file_name(str(datetime.datetime.now()))
-    logdir = opt.outf + opt.model + date_time
-    if not os.path.exists(logdir):
-        os.makedirs(logdir)
-    logfile = os.path.join(logdir, "train.log")
+    if opt.save:
+        logdir = opt.outf + "metrics/"
+        logfile = os.path.join(logdir, f"{opt.model}.log")
+    else:
+        logdir = opt.outf + opt.model + date_time
+        if not os.path.exists(logdir):
+            os.makedirs(logdir)
+        logfile = os.path.join(logdir, "train.log")
     logger = initialize_logger(logfile)
 
 # Load model
@@ -126,6 +139,36 @@ if opt.pretrained_path:
         optimizer.load_state_dict(checkpoint["optimizer"])
 
 
+def save(
+    model: nn.Module,
+    device: torch.device,
+    losses: Dict[str, Callable],
+    dir: str,
+    logger,
+):
+    val_loader = DataLoader(
+        dataset=val_data,
+        batch_size=1,
+        shuffle=False,
+        num_workers=2,
+        pin_memory=True,
+    )
+    model.eval()
+
+    for i, (input, target) in enumerate(val_loader):
+        input = input.to(device)
+        target = target.to(device)
+        with torch.no_grad():
+            output = model(input)
+            loss_str = ""
+            for loss, fn in losses.items():
+                loss_str += f"{loss}: {fn(output, target).data},"
+
+            logger.info(loss_str)
+            name = dir + f"ARAD_1K_{900+i:04d}"
+            arad_save_hsi(name, output.squeeze().numpy(force=True))
+
+
 def test(model: nn.Module, device: torch.device, loss_fns: Dict[str, Callable]):
     val_loader = DataLoader(
         dataset=val_data,
@@ -146,6 +189,17 @@ def test(model: nn.Module, device: torch.device, loss_fns: Dict[str, Callable]):
 def main():
     if opt.test:
         test(model, device, loss_fns)
+        return 0
+    elif opt.save:
+        if not opt.pretrained_path:
+            print("Warning: Using an untrained model")
+        save(
+            model,
+            device,
+            loss_fns,
+            opt.save_dir,
+            logger,
+        )
         return 0
     global iter
     torch.backends.cudnn.benchmark = True

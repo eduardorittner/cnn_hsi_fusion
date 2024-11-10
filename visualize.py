@@ -7,6 +7,7 @@ from dataset import ValidationDataset, TrainDataset
 import matplotlib.pyplot as plt
 import torch
 import numpy as np
+from utils.img import arad_open
 
 # CLI Arguments
 
@@ -29,6 +30,7 @@ parser.add_argument(
 'predict' for the model output
 'target' for the target used
 'error' for the difference between output and target
+'saved' for files not in the validation dataset, --path must be set
 """,
 )
 parser.add_argument("--id", type=int, default=1, help="Image id")
@@ -38,6 +40,9 @@ parser.add_argument(
     "--no-norm",
     action="store_true",
     help="Whether visualized output should be normalized or not",
+)
+parser.add_argument(
+    "--path", type=str, help="Path to saved file. Only used for generated images"
 )
 opt = parser.parse_args()
 
@@ -64,6 +69,11 @@ def visualize_image(img: np.ndarray, bands: int):
             else:
                 break
     plt.show()
+
+
+def image(path: str):
+    img = arad_open(path, True)
+    visualize_image(img, 8)
 
 
 def pure_rgb(dataset: TrainDataset | ValidationDataset, idx: int):
@@ -161,6 +171,8 @@ def main():
             target(dataset, opt.id)
         case "error":
             error(dataset, opt.id, opt.model, opt.model_path)
+        case "saved":
+            image(opt.path)
         case _:
             raise Exception(f"No stage named {opt.stage}")
 

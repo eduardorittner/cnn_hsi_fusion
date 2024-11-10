@@ -73,7 +73,7 @@ def visualize_image(img: np.ndarray, bands: int):
 
 def image(path: str):
     img = arad_open(path, True)
-    visualize_image(img, 8)
+    visualize_image(img, 9)
 
 
 def pure_rgb(dataset: TrainDataset | ValidationDataset, idx: int):

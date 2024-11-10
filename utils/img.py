@@ -45,6 +45,7 @@ def arad_open(file: str, cropped=False) -> np.ndarray:
 
 def arad_save_hsi(file: str, img: np.ndarray):
     assert img.shape[0] == 31, f"HSI to be saved must have 31 bands, found: {img.shape}"
+    img = img.transpose(0, 2, 1)
 
     f = h5py.File(file + ".mat", "w")
 

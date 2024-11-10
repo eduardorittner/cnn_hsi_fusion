@@ -165,7 +165,7 @@ def save(
                 loss_str += f"{loss}: {fn(output, target).data},"
 
             logger.info(loss_str)
-            name = dir + f"ARAD_1K_{900+i:04d}"
+            name = dir + f"ARAD_1K_{901+i:04d}"
             arad_save_hsi(name, output.squeeze().numpy(force=True))
 
 

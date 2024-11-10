@@ -48,6 +48,7 @@ def arad_save_hsi(file: str, img: np.ndarray):
 
     f = h5py.File(file + ".mat", "w")
 
+    # The original .mat files also have a "norm_factor" which I don't know the purpose
     f.create_dataset("cube", data=img)
     f.create_dataset("bands", data=[float(i) for i in range(400, 701, 10)])
     f.close()

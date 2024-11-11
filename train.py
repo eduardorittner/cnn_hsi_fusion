@@ -1,6 +1,15 @@
 from torch.cuda import is_available
 from dataset import TrainDataset, ValidationDataset
-from utils.loss import Loss_MRAE, Loss_RMSE, Loss_PSNR, Loss_SSIM, Loss_SAM
+from utils.loss import (
+    Loss_MRAE,
+    Loss_MRAEBand,
+    Loss_RMSE,
+    Loss_RMSEBand,
+    Loss_PSNR,
+    Loss_SSIM,
+    Loss_SSIMBand,
+    Loss_SAM,
+)
 from utils.log import (
     AverageMeter,
     time2file_name,
@@ -86,9 +95,12 @@ print(f"{iters_per_epoch} iterations per epoch")
 # Loss functions
 
 loss_mrae = Loss_MRAE()
+loss_mrae_band = Loss_MRAEBand()
 loss_rmse = Loss_RMSE()
+loss_rmse_band = Loss_RMSEBand()
 loss_psnr = Loss_PSNR()
 loss_ssim = Loss_SSIM()
+loss_ssim_band = Loss_SSIMBand()
 loss_sam = Loss_SAM()
 
 # Logger
@@ -123,6 +135,10 @@ loss_fns = {
     "sam": loss_sam.to(device),
 }
 
+if opt.save:
+    loss_fns["mrae_band"] = loss_mrae_band.to(device)
+    loss_fns["rmse_band"] = loss_rmse_band.to(device)
+    loss_fns["ssim_band"] = loss_ssim_band.to(device)
 optimizer = torch.optim.Adam(model.parameters(), lr=4e-4, betas=(0.9, 0.999))
 scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
     optimizer, total_iters, eta_min=1e-6
@@ -164,6 +180,10 @@ def save(
             for loss, fn in losses.items():
                 loss_str += f"{loss}: {fn(output, target).data},"
 
+            # For some reason when formatting tensors some random '\n' and a bunch
+            # of whitespace appears, so remove that here
+            loss_str = loss_str.replace("\n", "")
+            loss_str = loss_str.replace("  ", "")
             logger.info(loss_str)
             name = dir + f"ARAD_1K_{901+i:04d}"
             arad_save_hsi(name, output.squeeze().numpy(force=True))

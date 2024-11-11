@@ -18,6 +18,22 @@ class Loss_MRAE(nn.Module):
         return mrae
 
 
+class Loss_MRAEBand(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, output: torch.Tensor, target: torch.Tensor):
+        # Should only be calculated on batch_size == 1
+        assert target.size()[0] == 1
+        assert target.size()[1] == 31
+        target, output = target.squeeze(), output.squeeze()
+        metrics = []
+        error = torch.abs(output.sub(target) - target) / target
+        for i in range(31):
+            metrics.append(torch.mean(error[i, :, :].flatten()))
+        return torch.stack(metrics)
+
+
 class Loss_RMSE(nn.Module):
     def __init__(self):
         super(Loss_RMSE, self).__init__()
@@ -28,6 +44,23 @@ class Loss_RMSE(nn.Module):
         sqrt_error = torch.pow(error, 2)
         rmse = torch.sqrt(torch.mean(sqrt_error.flatten()))
         return rmse
+
+
+class Loss_RMSEBand(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, output: torch.Tensor, target: torch.Tensor):
+        # Should only be calculated on batch_size == 1
+        assert target.size()[0] == 1
+        assert target.size()[1] == 31
+        error = output - target
+        sqrt_error = torch.pow(error, 2).squeeze()
+
+        metrics = []
+        for i in range(31):
+            metrics.append(torch.sqrt(torch.mean(sqrt_error[i, :, :].flatten())))
+        return torch.stack(metrics)
 
 
 class Loss_PSNR(nn.Module):
@@ -57,6 +90,27 @@ class Loss_SSIM(nn.Module):
         return structural_similarity_index_measure(
             output, target, data_range=(0.0, 1.0)
         )
+
+
+class Loss_SSIMBand(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, target: torch.Tensor, output: torch.Tensor):
+        # Should only be calculated on batch_size == 1
+        assert target.size()[0] == 1
+        assert target.size()[1] == 31
+        metrics = []
+        for i in range(31):
+            metrics.append(
+                structural_similarity_index_measure(
+                    output[0, i, :, :].unsqueeze_(0).unsqueeze_(0),
+                    target[0, i, :, :].unsqueeze_(0).unsqueeze_(0),
+                    data_range=(0.0, 1.0),
+                )
+            )
+
+        return torch.stack(metrics)
 
 
 class Loss_SAM(nn.Module):

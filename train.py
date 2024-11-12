@@ -108,7 +108,7 @@ loss_sam = Loss_SAM()
 if not opt.test:
     date_time = time2file_name(str(datetime.datetime.now()))
     if opt.save:
-        logdir = opt.outf + "metrics/"
+        logdir = opt.outf
         logfile = os.path.join(logdir, f"{opt.model}.log")
     else:
         logdir = opt.outf + opt.model + date_time

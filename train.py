@@ -184,7 +184,8 @@ def save(
             # of whitespace appears, so remove that here
             loss_str = loss_str.replace("\n", "")
             loss_str = loss_str.replace("  ", "")
-            logger.info(loss_str)
+
+            logger.info(f"ARAD_1K_{901+i:04d} - " + loss_str)
             name = dir + f"ARAD_1K_{901+i:04d}"
             arad_save_hsi(name, output.squeeze().numpy(force=True))
 

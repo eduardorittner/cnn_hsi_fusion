@@ -171,6 +171,9 @@ def save(
     )
     model.eval()
 
+    if not os.path.isdir(dir):
+        os.mkdir(dir)
+
     for i, (input, target) in enumerate(val_loader):
         input = input.to(device)
         target = target.to(device)

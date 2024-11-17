@@ -139,7 +139,9 @@ if opt.save:
     loss_fns["mrae_band"] = loss_mrae_band.to(device)
     loss_fns["rmse_band"] = loss_rmse_band.to(device)
     loss_fns["ssim_band"] = loss_ssim_band.to(device)
-optimizer = torch.optim.Adam(model.parameters(), lr=4e-4, betas=(0.9, 0.999))
+
+# TODO: habilitar weight decay pra tentar suavizar = 1e-4
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-4, betas=(0.9, 0.999))
 scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
     optimizer, total_iters, eta_min=1e-6
 )
@@ -292,7 +294,8 @@ def main():
                 else:
                     epochs_since_record += 1
 
-                if epochs_since_record == 10:
+                # TODO Colocar =20 pro treinamento do restormer
+                if epochs_since_record == 20:
                     print(
                         "10 epochs since mrae validation loss improved, stopping now."
                     )

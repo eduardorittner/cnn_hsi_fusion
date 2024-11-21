@@ -1,6 +1,6 @@
 python train.py --save --model mst --save-dir results/mst/ --pretrained-path exp/mstexp1/net_30epoch.pth
 wait
-python train.py --save --model mst-plus-plus --save-dir results/mst-plus/ --pretrained-path exp/mst-plus-exp1/net_47epoch.pth
+python train.py --save --model mst_plus_plus --save-dir results/mst-plus/ --pretrained-path exp/mst-plus-exp1/net_47epoch.pth
 wait
 python train.py --save --model mprnet --save-dir results/mprnet/ --pretrained-path exp/mprnet-exp2/net_149epoch.pth
 wait
